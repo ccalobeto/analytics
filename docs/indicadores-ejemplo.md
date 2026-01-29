@@ -1,10 +1,31 @@
 # Ejemplo de Indicadores
 
-Buenísimo, este KPI suele ser **el más mal entendido**, así que vamos con un **ejemplo muy concreto, paso a paso**, como para explicarlo en comité sin PowerPoint 😄.
-
 ---
 
 ## Contenido
+
+- [Cantidad mínima de pedido (MOQ)](#cantidad-mínima-de-pedido-moq)
+- [Pipeline ponderado por margen](#pipeline-ponderado-por-margen)
+
+## Cantidad mínima de pedido (MOQ)
+
+Mide la cantidad mínima que conviene producir o vender sin perder dinero.
+
+```sh
+MOQ = Costos fijos por setup / margen unitario
+```
+
+### Ejemplo
+
+Costo de setup: S/ 500
+Margen por unidad: S/ 0.50
+
+```sh
+MOQ = 500 / 0.50 = 1,000 unidades
+
+```
+
+Pedidos menores a 1,000 deben pagar sobreprecio.
 
 ## Pipeline ponderado por margen
 
@@ -30,9 +51,9 @@ Pipeline = Σ (Monto × probabilidad)
 
 Cálculo:
 
-* A: 100,000 × 0.6 = 60,000
-* B: 80,000 × 0.4 = 32,000
-* C: 50,000 × 0.8 = 40,000
+- A: 100,000 × 0.6 = 60,000
+- B: 80,000 × 0.4 = 32,000
+- C: 50,000 × 0.8 = 40,000
 
 👉 **Pipeline tradicional = S/ 132,000**
 
@@ -62,19 +83,19 @@ Pipeline EBITDA = Monto × margen × probabilidad
 
 ### Cálculo
 
-* A: 100,000 × 25% × 60% = **15,000**
-* B: 80,000 × 12% × 40% = **3,840**
-* C: 50,000 × 35% × 80% = **14,000**
+- A: 100,000 × 25% × 60% = **15,000**
+- B: 80,000 × 12% × 40% = **3,840**
+- C: 50,000 × 35% × 80% = **14,000**
 
 👉 **Pipeline ponderado por margen = 15,000 + 3,840 + 14,000 = S/ 32,840**
 
 ---
 
-### 🧠 Interpretación gerencial (muy potente)
+### 🧠 Interpretación gerencial
 
-* Cliente B parece atractivo por monto,
+- Cliente B parece atractivo por monto,
   👉 pero aporta **solo 12% del EBITDA potencial**
-* Cliente C es pequeño,
+- Cliente C es pequeño,
   👉 pero casi iguala el EBITDA del cliente A
 
 ---
@@ -90,14 +111,14 @@ Monto × margen × probabilidad × factor operativo
 
 Ejemplo:
 
-* Cliente urgente, lotes pequeños → factor 0.8
-* Cliente estable → factor 1.0
+- Cliente urgente, lotes pequeños → factor 0.8
+- Cliente estable → factor 1.0
 
 ---
 
 #### Conclusión
 
 > “Tenemos S/ 132 mil en pipeline comercial,
-> pero solo **S/ 32.8 mil de EBITDA potencial real**.”
+> pero solo **S/ 32.8 mil de EBITDA potencial real (sin riesgo operativo)**.”
 
 ---

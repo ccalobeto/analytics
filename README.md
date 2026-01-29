@@ -16,9 +16,7 @@ Este documento es un primer análisis sobre los indicadores clave para medir el 
 
 ## PRINCIPIO CLAVE (para gerencia)
 
-> **Marketing y Ventas deben optimizar rentabilidad, no solo ingresos.**
-
-De acuerdo a los procedimientos colgados en la intranet, hoy miden:
+De acuerdo a los procedimientos colgados en la intranet de Corporación Rey, hoy miden:
 
 - ventas totales
 - número de clientes
@@ -30,21 +28,19 @@ De acuerdo a los procedimientos colgados en la intranet, hoy miden:
 
 ### 🔴 1. Margen bruto por cliente
 
-- **(TOP 1 – irrenunciable)**
-
 ```bash
 (Venta – costo real – logística – reprocesos) / venta
 ```
 
-- **Por qué importa**
+👉  **Por qué importa**
 
 - El 20% de clientes suele explicar el 80% del EBITDA
 - Detecta clientes que “se ven grandes” pero destruyen margen
 
-- **Decisión que habilita**
+👉  **Decisión que habilita**
 
 - Subir precios
-- Ajustar MOQ
+- Ajustar [MOQ](./docs/indicadores-ejemplo.md#cantidad-mínima-de-pedido-moq)
 - Eliminar clientes tóxicos
 
 >[!NOTE]
@@ -69,12 +65,12 @@ De acuerdo a los procedimientos colgados en la intranet, hoy miden:
 Ventas de productos con margen objetivo / ventas totales
 ```
 
-- **Ejemplo**
+👉  **Ejemplo**
 
 - Hoy: 45%
 - Objetivo: >65%
 
-👉 Mejor si el premio es por **mix**, no solo volumen.
+👉 Mejor si el premio a la fuerza de ventas es por **mix**, no solo volumen.
 
 ---
 
@@ -98,7 +94,7 @@ Pedidos OTIF sin sobrecosto / pedidos totales
 Ventas al precio mínimo aceptable / ventas totales
 ```
 
-Define:
+👉 Define:
 
 - Precio piso por producto
 - Excepciones justificadas
@@ -107,7 +103,7 @@ Define:
 
 ## KPIs CLAVE para GERENCIA DE MARKETING (B2B industrial)
 
-Marketing aquí **no es likes**, es **calidad de demanda**.
+Marketing por **calidad de demanda**.
 
 ---
 
@@ -117,7 +113,7 @@ Marketing aquí **no es likes**, es **calidad de demanda**.
 (Gasto marketing + fuerza comercial) / clientes nuevos rentables
 ```
 
->[!IMPORTANT]:
+>[!IMPORTANT]
 > solo cuenta clientes que superan margen mínimo.
 
 ---
@@ -154,7 +150,7 @@ Pipeline × margen esperado
 1 – (precio vendido / precio lista)
 ```
 
-Separar:
+👉  Separar:
 
 - por vendedor
 - por cliente
@@ -170,7 +166,7 @@ Separar:
 Venta incremental – costo incremental
 ```
 
-Muchas promos **destruyen margen**.
+Muchas promociones **destruyen margen**.
 
 ---
 
@@ -221,11 +217,11 @@ Si tuviera que resumir en **10 KPIs de comité gerencial**:
 
 ---
 
-## 7️⃣ Error típico que deben evitar
+## Evitar
 
-❌ Bonificar vendedores por volumen
-❌ Marketing por leads sin calidad
-❌ Urgencias comerciales sin costo visible
+- ❌ Bonificar vendedores por volumen
+- ❌ Marketing por leads sin calidad
+- ❌ Urgencias comerciales sin costo visible
 
 ✔ Bonificar por **margen + disciplina operativa**
 
