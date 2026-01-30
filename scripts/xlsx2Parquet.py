@@ -1,5 +1,22 @@
 import pandas as pd
 from openpyxl import load_workbook
+import re
+import unicodedata
+
+def to_snake_case(col):
+    # Normalize accents (AÑO -> ANO)
+    col = unicodedata.normalize("NFKD", str(col)).encode("ascii", "ignore").decode()
+
+    # Lowercase
+    col = col.lower()
+
+    # Replace non-alphanumeric with underscore
+    col = re.sub(r"[^a-z0-9]+", "_", col)
+
+    # Remove leading/trailing underscores
+    col = col.strip("_")
+
+    return col
 
 # Inputs
 xlsx_file = "data/FacturacionReyExportacion v2.xlsx"
@@ -18,6 +35,9 @@ for row in ws.iter_rows(values_only=True):
 
 # Build DataFrame
 df = pd.DataFrame(rows[7:], columns=rows[6])  # skip first 7 empty rows
+
+# Apply normalization
+df.columns = [to_snake_case(c) for c in df.columns]
 
 # remove the columns when all the values are None
 df = df.dropna(axis=1, how='all')
