@@ -21,8 +21,8 @@ def to_snake_case(col):
 # Inputs
 xlsx_file = "data/FacturacionReyExportacion v2.xlsx"
 sheet_name = "Td (3)"   # or sheet index like 0
-csv_out = "./data/outputs/output.csv"
-parquet_out = "./data/outputs/output.parquet"
+csv_out = "./user_files/output.csv"
+parquet_out = "./user_files/output.parquet"
 skiprows = 6  # Number of rows to skip at the start
 
 # Load workbook in safe mode (avoids pivot cache parsing)
