@@ -17,10 +17,11 @@ for row in ws.iter_rows(values_only=True):
     rows.append(row)
 
 # Build DataFrame
-df = pd.DataFrame(rows[8:], columns=rows[7])  # skip first 7 empty rows
+df = pd.DataFrame(rows[7:], columns=rows[6])  # skip first 7 empty rows
 
-# Read selected sheet
-# df = pd.read_excel(xlsx_file, sheet_name=sheet_name, skiprows=skiprows, engine='openpyxl')
+# remove the columns when all the values are None
+df = df.dropna(axis=1, how='all')
+df = df.iloc[:, :-1]  # remove last empty column if exists
 
 # Write outputs
 df.to_csv(csv_out, index=False)
