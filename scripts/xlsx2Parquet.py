@@ -43,6 +43,9 @@ df.columns = [to_snake_case(c) for c in df.columns]
 df = df.dropna(axis=1, how='all')
 df = df.iloc[:, :-1]  # remove last empty column if exists
 
+# Filter rows where 'fch_ano_dcmto' is numeric
+df = df[pd.to_numeric(df["fch_ano_dcmto"], errors="coerce").notna()]
+
 # Write outputs
 df.to_csv(csv_out, index=False)
 df.to_parquet(parquet_out, index=False)
