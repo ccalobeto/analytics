@@ -63,7 +63,7 @@ SELECT
     fch_ano_dcmto,
     dsc_jerarquia,
     grupo_articulo,
-    count(fch_ano_dcmto) AS count,
+    count() AS count,
     round(100 * count/sum(count) over (), 2) as participation_pct 
 FROM ryex
 GROUP BY
@@ -71,4 +71,6 @@ GROUP BY
     dsc_jerarquia,
     grupo_articulo
 ORDER BY count DESC
-LIMIT 5;
+LIMIT 5
+INTO OUTFILE './user_files/top_5_grupo_articulo_por_ano.csv' 
+FORMAT CSVWithNames;
