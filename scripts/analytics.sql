@@ -59,18 +59,46 @@ GROUP BY
 ORDER BY count DESC
 
 -- Top 5 grupo de artículo por año, el 80% de los pedidos
+WITH ranked AS (
+    SELECT
+        dsc_pais_destino,
+        fch_ano_dcmto,
+        intDiv(fch_mes_dcmto - 1, 3) + 1 AS fch_qua_dcmto,
+        dsc_jerarquia,
+        grupo_articulo,
+        count() AS cnt,
+        round(
+            100 * count() / sum(count()) OVER (PARTITION BY dsc_pais_destino),
+            2
+        ) AS participation_pct,
+        row_number() OVER (
+            PARTITION BY dsc_pais_destino
+            ORDER BY count() DESC
+        ) AS rn
+    FROM ryex
+    GROUP BY
+        dsc_pais_destino,
+        fch_ano_dcmto,
+        fch_qua_dcmto,
+        dsc_jerarquia,
+        grupo_articulo
+)
+
 SELECT
+    dsc_pais_destino,
     fch_ano_dcmto,
+    fch_qua_dcmto,
     dsc_jerarquia,
     grupo_articulo,
-    count() AS count,
-    round(100 * count/sum(count) over (), 2) as participation_pct 
-FROM ryex
-GROUP BY
-    fch_ano_dcmto,
-    dsc_jerarquia,
-    grupo_articulo
-ORDER BY count DESC
-LIMIT 5
-INTO OUTFILE './user_files/top_5_grupo_articulo_por_ano.csv' 
+    cnt AS count,
+    participation_pct
+FROM ranked
+--WHERE rn <= 5
+ORDER BY
+    dsc_pais_destino,
+    fch_ano_dcmto ASC,
+    fch_qua_dcmto ASC,
+    count DESC
+INTO OUTFILE './user_files/top_5_grupo_articulo_por_ano.csv'
+TRUNCATE
 FORMAT CSVWithNames;
