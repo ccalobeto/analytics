@@ -43,9 +43,12 @@ df.columns = [to_snake_case(c) for c in df.columns]
 df = df.dropna(axis=1, how='all')
 df = df.iloc[:, :-1]  # remove last empty column if exists
 
-print(df.columns.tolist())
 # Filter rows where 'fch_anomes_ped' is numeric
 df = df[pd.to_numeric(df["fch_anomes_ped"], errors="coerce").notna()]
+
+# force to be integer
+df["suma_de_num_dias_fchfac_vs_fchped"] = pd.to_numeric(df["suma_de_num_dias_fchfac_vs_fchped"], errors="coerce").astype("Int64")
+df["suma_de_num_dias_fchfac_vs_fchent"] = pd.to_numeric(df["suma_de_num_dias_fchfac_vs_fchent"], errors="coerce").astype("Int64")
 
 # invalids -> NaT
 df["fch_entrg"] = pd.to_datetime(df["fch_entrg"], errors="coerce")  
