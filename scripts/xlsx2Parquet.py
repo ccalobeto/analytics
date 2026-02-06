@@ -19,11 +19,11 @@ def to_snake_case(col):
     return col
 
 # Inputs
-xlsx_file = "data/FacturacionReyExportacion v2.xlsx"
-sheet_name = "Td (3)"   # or sheet index like 0
-csv_out = "./user_files/output.csv"
-parquet_out = "./user_files/output.parquet"
-skiprows = 6  # Number of rows to skip at the start
+xlsx_file = "data/Cronologico total.xlsx"
+sheet_name = "CRONO"   # or sheet index like 0
+csv_out = "./user_files/cronologico.csv"
+parquet_out = "./user_files/cronologico.parquet"
+skiprows = 12  # Number of rows to reach data
 
 # Load workbook in safe mode (avoids pivot cache parsing)
 wb = load_workbook(xlsx_file, read_only=True, data_only=True)
@@ -34,7 +34,7 @@ for row in ws.iter_rows(values_only=True):
     rows.append(row)
 
 # Build DataFrame
-df = pd.DataFrame(rows[7:], columns=rows[6])  # skip first 7 empty rows
+df = pd.DataFrame(rows[skiprows:], columns=rows[skiprows - 1]) 
 
 # Apply normalization
 df.columns = [to_snake_case(c) for c in df.columns]
@@ -43,8 +43,12 @@ df.columns = [to_snake_case(c) for c in df.columns]
 df = df.dropna(axis=1, how='all')
 df = df.iloc[:, :-1]  # remove last empty column if exists
 
-# Filter rows where 'fch_ano_dcmto' is numeric
-df = df[pd.to_numeric(df["fch_ano_dcmto"], errors="coerce").notna()]
+print(df.columns.tolist())
+# Filter rows where 'fch_anomes_ped' is numeric
+df = df[pd.to_numeric(df["fch_anomes_ped"], errors="coerce").notna()]
+
+# invalids -> NaT
+df["fch_entrg"] = pd.to_datetime(df["fch_entrg"], errors="coerce")  
 
 # Write outputs
 df.to_csv(csv_out, index=False)
