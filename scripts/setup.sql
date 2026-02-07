@@ -4,11 +4,13 @@ USE analytics;
 CREATE TABLE IF NOT EXISTS cronologico
 (
     -- use Nullable for Excel-origin data
+    dsc_clasif_cl	                    Nullable(String),
+    dsc_gpo_cli1	                    Nullable(String),
+    sku_rey	                            Nullable(String),
+    cod_ovtas	                        Nullable(String),
     fch_anomes_ped	                    Nullable(Int32),
     num_ped	                            Nullable(String),
     flg_abc_xyz	                        Nullable(String),
-    dsc_zona_vta	                    Nullable(String),
-    dsc_mat_sku	                        Nullable(String),
     dsc_jerarq3	                        Nullable(String),
     dsc_jerarq2	                        Nullable(String),
     dsc_jerarq1	                        Nullable(String),
