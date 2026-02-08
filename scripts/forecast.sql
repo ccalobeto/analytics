@@ -1,5 +1,5 @@
 
--- suma de pedidos por año y mes
+-- 1. Create a view of monthly sales data by material
 CREATE OR REPLACE VIEW vw_monthly_hist_by_material AS
 WITH monthly_hist AS (
   SELECT
@@ -23,20 +23,9 @@ ORDER BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material,
 -- TRUNCATE
 -- FORMAT CSVWithNames;
 
--- Media Movil por material
+-- 2. Create Moving Average to forecast the next 12 months of sales data by material
 WITH
-  keys AS (    
-    SELECT DISTINCT
-      cod_ovtas,
-      flg_abc_xyz,
-      dsc_jerarq1,
-      dsc_jerarq2,
-      dsc_jerarq3,
-      material
-    FROM cronologico
-    ),
-    
--- 1) Monthly history from daily
+  -- 2.1) Monthly history from daily
   monthly_hist AS (
     SELECT 
       cod_ovtas,
@@ -48,7 +37,7 @@ WITH
     toStartOfMonth(fch_ped) AS m,
     sum(suma_de_ctd_ped_eqv) AS y_m
     FROM cronologico
-    -- only up to last month
+    -- only up to a completed month
     WHERE toStartOfMonth(fch_ped) < toStartOfMonth(today()) 
     GROUP BY 
       cod_ovtas,
@@ -59,7 +48,7 @@ WITH
       material,
       m
   ),
-  -- 2) 12-month moving average
+  -- 2.2) 12-month moving average
   moving_avg AS (
     SELECT
       cod_ovtas,
@@ -76,7 +65,7 @@ WITH
       ) AS ma12
     FROM monthly_hist
   ),
-  -- 3) Latest month & its MA12 (deterministic
+  -- 2.3) Latest month & its MA12
   last_ma AS (
     SELECT 
       cod_ovtas,
@@ -96,7 +85,18 @@ WITH
       dsc_jerarq3, 
       material
   ),
-  -- 4) Forecast horizon: next 3 calendar months from today()
+  -- 2.4) Create the keys for the forecast (distinct combinations of dimensions)
+    keys AS (    
+    SELECT DISTINCT
+      cod_ovtas,
+      flg_abc_xyz,
+      dsc_jerarq1,
+      dsc_jerarq2,
+      dsc_jerarq3,
+      material
+    FROM cronologico
+    ),
+  -- 2.5) Forecast horizon: next 3 calendar months from today()
   future AS (
     SELECT
       k.cod_ovtas,
@@ -110,7 +110,7 @@ WITH
     ARRAY JOIN range(0,4) AS off
   )
 
--- 5) Final forecast (flat projection = last MA12)
+-- 2.6) Final forecast exported to CSV
 SELECT
   f.cod_ovtas,
   f.flg_abc_xyz,
@@ -135,21 +135,9 @@ INTO OUTFILE './user_files/forecast_by_material.csv'
 TRUNCATE
 FORMAT CSVWithNames;
 
--- Media Movil por sku
-WITH
-  keys AS (    
-    SELECT DISTINCT
-      cod_ovtas,
-      flg_abc_xyz,
-      dsc_jerarq1,
-      dsc_jerarq2,
-      dsc_jerarq3,
-      material,
-      sku_rey
-    FROM cronologico
-    ),
-    
--- 1) Monthly history from daily
+-- 3. Create Moving Average to forecast the next 12 months of sales data by SKU
+WITH  
+  -- 3.1) Monthly history from daily
   monthly_hist AS (
     SELECT 
       cod_ovtas,
@@ -174,7 +162,7 @@ WITH
       sku_rey,
       m
   ),
-  -- 2) 12-month moving average
+  -- 3.2) 12-month moving average
   moving_avg AS (
     SELECT
       cod_ovtas,
@@ -192,7 +180,7 @@ WITH
       ) AS ma12
     FROM monthly_hist
   ),
-  -- 3) Latest month & its MA12 (deterministic
+  -- 3.3) Latest month & its MA12
   last_ma AS (
     SELECT 
       cod_ovtas,
@@ -214,7 +202,19 @@ WITH
       material,
       sku_rey
   ),
-  -- 4) Forecast horizon: next 3 calendar months from today()
+  -- 3.4) Create the keys for the forecast
+  keys AS (    
+    SELECT DISTINCT
+      cod_ovtas,
+      flg_abc_xyz,
+      dsc_jerarq1,
+      dsc_jerarq2,
+      dsc_jerarq3,
+      material,
+      sku_rey
+    FROM cronologico
+    ),
+  -- 3.5) Forecast horizon: next 3 calendar months from today()
   future AS (
     SELECT
       k.cod_ovtas,
@@ -229,7 +229,7 @@ WITH
     ARRAY JOIN range(0,4) AS off
   )
 
--- 5) Final forecast (flat projection = last MA12)
+-- 3.6) Final forecast exported to CSV
 SELECT
   f.cod_ovtas,
   f.flg_abc_xyz,
