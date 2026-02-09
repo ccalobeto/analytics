@@ -9,4 +9,7 @@ preprocessed_configs
 store
 tmp
 system
-data/analytics
+data/
+datalake/
+user_files/
+
