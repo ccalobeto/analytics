@@ -26,20 +26,29 @@ monthly_hist AS (
         m
 ),
 
--- 2. Min / Max month per SKU
-sku_ranges AS (
+-- 2. Global min / max month
+global_range AS (
     SELECT
-        cod_ovtas,
-        flg_abc_xyz,
-        dsc_jerarq1,
-        dsc_jerarq2,
-        dsc_jerarq3,
-        material,
-        sku_rey,
         min(m) AS min_m,
         max(m) AS max_m
     FROM monthly_hist
-    GROUP BY
+),
+
+-- 3. Global monthly calendar
+calendar AS (
+    SELECT
+        arrayJoin(
+            arrayMap(
+                x -> addMonths(min_m, x),
+                range(dateDiff('month', min_m, max_m) + 1)
+            )
+        ) AS m
+    FROM global_range
+),
+
+-- 4. Distinct SKUs
+skus AS (
+    SELECT DISTINCT
         cod_ovtas,
         flg_abc_xyz,
         dsc_jerarq1,
@@ -47,47 +56,30 @@ sku_ranges AS (
         dsc_jerarq3,
         material,
         sku_rey
-),
-
--- 3. Generate full month calendar per SKU
-calendar AS (
-    SELECT
-        cod_ovtas,
-        flg_abc_xyz,
-        dsc_jerarq1,
-        dsc_jerarq2,
-        dsc_jerarq3,
-        material,
-        sku_rey,
-        arrayJoin(
-            arrayMap(
-                x -> addMonths(min_m, x),
-                range(dateDiff('month', min_m, max_m) + 1)
-            )
-        ) AS m
-    FROM sku_ranges
+    FROM monthly_hist
 )
 
--- 4. Left join real sales to calendar
+-- 5. Cross join SKUs × calendar, then left join sales
 SELECT
-    c.cod_ovtas,
-    c.flg_abc_xyz,
-    c.dsc_jerarq1,
-    c.dsc_jerarq2,
-    c.dsc_jerarq3,
-    c.material,
-    c.sku_rey,
-    c.m,
+    s.cod_ovtas AS cod_ovtas,
+    s.flg_abc_xyz AS flg_abc_xyz,
+    s.dsc_jerarq1 AS dsc_jerarq1,
+    s.dsc_jerarq2 AS dsc_jerarq2,
+    s.dsc_jerarq3 AS dsc_jerarq3,
+    s.material AS material,
+    s.sku_rey AS sku_rey,
+    c.m AS m,
     ifNull(h.ctd_ped, 0) AS ctd_ped,
     ifNull(h.ctd_ped_eqv, 0) AS ctd_ped_eqv,
     ifNull(h.imp_ped, 0) AS imp_ped
-FROM calendar c
+FROM skus s
+CROSS JOIN calendar c
 LEFT JOIN monthly_hist h
-    ON  c.cod_ovtas = h.cod_ovtas
-    AND c.flg_abc_xyz = h.flg_abc_xyz
-    AND c.dsc_jerarq1 = h.dsc_jerarq1
-    AND c.dsc_jerarq2 = h.dsc_jerarq2
-    AND c.dsc_jerarq3 = h.dsc_jerarq3
-    AND c.material = h.material
-    AND c.sku_rey = h.sku_rey
+    ON  s.cod_ovtas = h.cod_ovtas
+    AND s.flg_abc_xyz = h.flg_abc_xyz
+    AND s.dsc_jerarq1 = h.dsc_jerarq1
+    AND s.dsc_jerarq2 = h.dsc_jerarq2
+    AND s.dsc_jerarq3 = h.dsc_jerarq3
+    AND s.material = h.material
+    AND s.sku_rey = h.sku_rey
     AND c.m = h.m;
