@@ -1,6 +1,6 @@
-
--- 1. Create a view of monthly sales data by material
-CREATE OR REPLACE VIEW vw_monthly_hist_by_material AS
+-- 1. Views of monthly sales data
+-- 1.1) Create a view of monthly sales data by material
+CREATE OR REPLACE VIEW vw_monthly_sales_by_material AS
 WITH monthly_hist AS (
   SELECT
     cod_ovtas,
@@ -9,19 +9,60 @@ WITH monthly_hist AS (
     dsc_jerarq2,
     dsc_jerarq3,
     material,
-    toStartOfMonth(fch_ped) AS startOfMonth,
-    sum(suma_de_ctd_ped) AS suma_de_ctd_ped,
-    sum(suma_de_ctd_ped_eqv) AS suma_de_ctd_ped_eqv,
-    sum(suma_de_imp_ped) AS suma_de_imp_ped
+    toStartOfMonth(fch_ped) AS m,
+    sum(suma_de_ctd_ped) AS ctd_ped,
+    sum(suma_de_ctd_ped_eqv) AS ctd_ped_eqv,
+    sum(suma_de_imp_ped) AS imp_ped
   FROM cronologico
-  GROUP BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, startOfMonth
+  GROUP BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, m
 )
 
 SELECT * FROM monthly_hist
-ORDER BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, startOfMonth
+ORDER BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, m
 -- INTO OUTFILE './user_files/monthly_hist_by_material.csv'
 -- TRUNCATE
 -- FORMAT CSVWithNames;
+
+-- 1.2) Create a view of monthly sales by sku
+CREATE OR REPLACE VIEW vw_monthly_sales_by_sku AS
+WITH monthly_hist AS (
+  SELECT
+    cod_ovtas,
+    flg_abc_xyz,
+    dsc_jerarq1,
+    dsc_jerarq2,
+    dsc_jerarq3,
+    material,
+    sku_rey,
+    toStartOfMonth(fch_ped) AS m,
+    sum(suma_de_ctd_ped) AS ctd_ped,
+    sum(suma_de_ctd_ped_eqv) AS ctd_ped_eqv,
+    sum(suma_de_imp_ped) AS imp_ped
+  FROM cronologico
+  GROUP BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey, m
+)
+
+SELECT * FROM monthly_hist
+ORDER BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey, m
+
+--1.3 ) Get the average sales, standard deviation, coefficient of variation and percentage of zero sales by SKU and family
+SELECT
+    cod_ovtas,
+    flg_abc_xyz,
+    dsc_jerarq1,
+    dsc_jerarq2,
+    dsc_jerarq3,
+    material,
+    sku_rey,
+    avg(ctd_ped_eqv) AS avg_sales,
+    stddevPop(ctd_ped_eqv) AS std_sales,
+    stddevPop(ctd_ped_eqv) / nullIf(avg(ctd_ped_eqv), 0) AS cv,
+    countIf(ctd_ped_eqv = 0) / count() AS pct_zero
+FROM vw_monthly_sales_by_sku
+GROUP BY cod_ovtas, flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey
+INTO OUTFILE './user_files/sku_metrics.csv'
+TRUNCATE
+FORMAT CSVWithNames;
 
 -- 2. Create Moving Average to forecast the next 12 months of sales data by material
 WITH
@@ -137,32 +178,7 @@ FORMAT CSVWithNames;
 
 -- 3. Create Moving Average to forecast the next 12 months of sales data by SKU
 WITH  
-  -- 3.1) Monthly history from daily
-  monthly_hist AS (
-    SELECT 
-      cod_ovtas,
-      flg_abc_xyz,
-      dsc_jerarq1,
-      dsc_jerarq2,
-      dsc_jerarq3,
-      material,
-      sku_rey,
-    toStartOfMonth(fch_ped) AS m,
-    sum(suma_de_ctd_ped_eqv) AS y_m
-    FROM cronologico
-    -- only up to last month
-    WHERE toStartOfMonth(fch_ped) < toStartOfMonth(today()) 
-    GROUP BY 
-      cod_ovtas,
-      flg_abc_xyz, 
-      dsc_jerarq1, 
-      dsc_jerarq2, 
-      dsc_jerarq3, 
-      material,
-      sku_rey,
-      m
-  ),
-  -- 3.2) 12-month moving average
+  -- 3.1) 12-month moving average
   moving_avg AS (
     SELECT
       cod_ovtas,
@@ -173,14 +189,16 @@ WITH
       material,
       sku_rey,
       m,
-      AVG(y_m) OVER (
+      AVG(ctd_ped_eqv) OVER (
         PARTITION BY cod_ovtas, flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey
         ORDER BY m
         ROWS BETWEEN 11 PRECEDING AND CURRENT ROW
       ) AS ma12
-    FROM monthly_hist
+    FROM vw_monthly_sales_by_sku
+    -- only up to last month
+    WHERE m < toStartOfMonth(today()) 
   ),
-  -- 3.3) Latest month & its MA12
+  -- 3.2) Latest month & its MA12
   last_ma AS (
     SELECT 
       cod_ovtas,
@@ -202,7 +220,7 @@ WITH
       material,
       sku_rey
   ),
-  -- 3.4) Create the keys for the forecast
+  -- 3.3) Create the keys for the forecast
   keys AS (    
     SELECT DISTINCT
       cod_ovtas,
@@ -214,7 +232,7 @@ WITH
       sku_rey
     FROM cronologico
     ),
-  -- 3.5) Forecast horizon: next 3 calendar months from today()
+  -- 3.4) Forecast horizon: next 3 calendar months from today()
   future AS (
     SELECT
       k.cod_ovtas,
@@ -229,7 +247,7 @@ WITH
     ARRAY JOIN range(0,4) AS off
   )
 
--- 3.6) Final forecast exported to CSV
+-- 3.5) Final forecast exported to CSV
 SELECT
   f.cod_ovtas,
   f.flg_abc_xyz,
@@ -252,6 +270,6 @@ ORDER BY
   material, 
   sku_rey,
   m
-INTO OUTFILE './user_files/forecast_by_sku.csv'
+INTO OUTFILE './user_files/forecast_by_sku_.csv'
 TRUNCATE
 FORMAT CSVWithNames;
