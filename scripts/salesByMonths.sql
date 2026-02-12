@@ -1,5 +1,6 @@
 CREATE OR REPLACE VIEW vw_monthly_sales_by_sku AS
 WITH
+-- Aggregate real monthly sales including months with zero sales
 -- 1. Aggregate real monthly sales
 monthly_hist AS (
     SELECT
