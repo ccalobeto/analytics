@@ -42,8 +42,11 @@ WITH monthly_hist AS (
   GROUP BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey, m
 )
 
-SELECT * FROM monthly_hist
+SELECT * FROM vw_monthly_sales_by_sku
 ORDER BY cod_ovtas,flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey, m
+INTO OUTFILE './user_files/monthly_sales_by_sku.csv'
+TRUNCATE
+FORMAT CSVWithNames;
 
 --1.3 ) Get the average sales, standard deviation, coefficient of variation and percentage of zero sales by SKU and family
 SELECT
@@ -59,6 +62,7 @@ SELECT
     stddevPop(ctd_ped_eqv) / nullIf(avg(ctd_ped_eqv), 0) AS cv,
     countIf(ctd_ped_eqv = 0) / count() AS pct_zero
 FROM vw_monthly_sales_by_sku
+WHERE m < toStartOfMonth(today()) -- only up to last month
 GROUP BY cod_ovtas, flg_abc_xyz, dsc_jerarq1, dsc_jerarq2, dsc_jerarq3, material, sku_rey
 INTO OUTFILE './user_files/sku_metrics.csv'
 TRUNCATE
