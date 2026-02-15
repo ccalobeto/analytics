@@ -1,3 +1,3 @@
-INSERT INTO analytics.ryex
+INSERT INTO analytics.cronologico
 SELECT *
-FROM file('output.csv', 'csv');
+FROM file('cronologico.csv', 'csv');

@@ -1,228 +1,55 @@
-# Indicadores clave de Marketing y Ventas
+# Technical documentation for Analytics
 
-Este documento es un primer análisis sobre los indicadores clave para medir el desempeño de Marketing y Ventas en una empresa manufacturera como **Corporación Rey**, con un enfoque en la generación de EBITDA.
+## Setup the python environment
 
----
+Activate your conda environment with the following command: `conda activate engineer`
 
-## Contenido
-
-- [🎯 PRINCIPIO CLAVE (para gerencia)](#principio-clave-para-gerencia)
-- [1️⃣ KPIs CORE para GERENCIA DE VENTAS (EBITDA-driven)](#kpis-core-para-gerencia-de-ventas-ebitda-driven)
-- [2️⃣ KPIs que conectan Ventas con Operaciones](#kpis-que-conectan-ventas-con-operaciones)
-- [3️⃣ KPIs CLAVE para GERENCIA DE MARKETING (B2B industrial)](#kpis-clave-para-gerencia-de-marketing-b2b-industrial)
-- [4️⃣ KPIs de cartera y pricing](#kpis-de-cartera-y-pricing)
-- [5️⃣ KPIs de clientes (calidad, no cantidad)](#kpis-de-clientes-calidad-no-cantidad)
-- [6️⃣ Conclusión](#conclusión)
-
-## PRINCIPIO CLAVE (para gerencia)
-
-De acuerdo a los procedimientos colgados en la intranet de Corporación Rey, hoy miden:
-
-- ventas totales
-- número de clientes
-- cumplimiento de presupuesto
-
----
-
-## KPIs CORE para GERENCIA DE VENTAS (EBITDA-driven)
-
-### 🔴 1. Margen bruto por cliente
-
-```bash
-(Venta – costo real – logística – reprocesos) / venta
-```
-
-👉  **Por qué importa**
-
-- El 20% de clientes suele explicar el 80% del EBITDA
-- Detecta clientes que “se ven grandes” pero destruyen margen
-
-👉  **Decisión que habilita**
-
-- Subir precios
-- Ajustar [MOQ](./docs/indicadores-ejemplo.md#cantidad-mínima-de-pedido-moq)
-- Eliminar clientes tóxicos
-
->[!NOTE]
-> MOQ (Minimum Order Quantity): cantidad mínima que conviene producir o vender sin perder dinero
-
----
-
-### 🔴 2. Margen por familia de producto
-
-(cierres / elásticos / etiquetas)
-
-👉 Ideal para:
-
-- Redefinir foco comercial
-- Alinear marketing con lo que sí deja plata
-
----
-
-### 🔴 3. Mix de ventas rentable
+- Then in your conda environment install pandas, openpyxl, pyarrow and fastparquet.
 
 ```sh
-Ventas de productos con margen objetivo / ventas totales
+conda install pandas openpyxl pyarrow fastparquet
 ```
 
-👉  **Ejemplo**
+## Import Excel files
 
-- Hoy: 45%
-- Objetivo: >65%
+The script converts Excel files to CSV or Parquet format, even when they have multiple sheets and filtered or pivoted data.
 
-👉 Mejor si el premio a la fuerza de ventas es por **mix**, no solo volumen.
+- Place the cronologico.xlsx file in the `data/` folder.
+- Setup the inputs section in the [scripts/xlsx2Parquet.py](../scripts/xlsx2Parquet.py) file
+- Execute the command `python scripts/xlsx2Parquet.py`, the output files (parquet and csv files) will be stored in the `user_files/` folder.
 
----
+## Import CSV files to ClickHouse
 
-## KPIs que conectan Ventas con Operaciones
+Due to csv parquet files can only be imported to ClickHouse, we will use ClickHouse to ingest the data.
 
-### 🔴 4. OTIF rentable
+- Create the schema and the `cronologico` table before running the command.
+- Use the [scripts/setup.sql](../scripts/setup.sql) file to create the necessary table into ClickHouse client.
 
 ```sh
-Pedidos OTIF sin sobrecosto / pedidos totales
+clickhouse client --multiquery < scripts/setup.sql
 ```
 
-👉 Vender pedidos urgentes que generan overtime **mata EBITDA**.
-
->[!NOTE]
-> OTIF (On Time In Full): pedidos entregados completos y a tiempo
----
-
-### 🔴 5. Ventas con precio objetivo
+- Use the [scripts/load.sql](../scripts/load.sql) file to load the CSV or Parquet files into ClickHouse client.
 
 ```sh
-Ventas al precio mínimo aceptable / ventas totales
+clickhouse client --multiquery < scripts/load.sql
 ```
 
-👉 Define:
+- Check the ingested data inside ClickHouse client with this `select count(*) from cronologico` command.
 
-- Precio piso por producto
-- Excepciones justificadas
-
----
-
-## KPIs CLAVE para GERENCIA DE MARKETING (B2B industrial)
-
-Marketing por **calidad de demanda**.
-
----
-
-### 🔴 6. CAC industrial (Costo de adquisición de cliente)
+- Create a view using bash
 
 ```sh
-(Gasto marketing + fuerza comercial) / clientes nuevos rentables
+clickhouse client \                                                                        60 ↵
+  --database analytics \    
+  --multiquery \
+  < scripts/salesBySku.sql     
 ```
 
->[!IMPORTANT]
-> solo cuenta clientes que superan margen mínimo.
+## Forecating
 
----
+The script to forecast the data is located in [scripts/forecast.sql](../scripts/forecast.sql).
 
-### 🔴 7. Tasa de conversión a cliente rentable
-
-```sh
-Clientes con margen objetivo / clientes nuevos
-```
-
-👉 Marketing debe atraer **clientes que la planta pueda servir bien**.
-
----
-
-### 🔴 8. Pipeline ponderado por margen
-
-No solo monto, sino:
-
-```sh
-Pipeline × margen esperado
-```
-
-[Ejemplo del indicador](./docs/indicadores-ejemplo.md#pipeline-ponderado-por-margen)
-
->[!NOTE]
-> Pipeline: mide cuánto EBITDA potencial hay en el pipeline comercial
----
-
-## KPIs de cartera y pricing
-
-### 🔴 9. Descuento promedio vs lista
-
-```sh
-1 – (precio vendido / precio lista)
-```
-
-👉  Separar:
-
-- por vendedor
-- por cliente
-- por producto
-
-👉 Aquí se fuga EBITDA **silenciosamente**.
-
----
-
-### 🔴 10. Rentabilidad de promociones y/o precios especiales
-
-```sh
-Venta incremental – costo incremental
-```
-
-Muchas promociones **destruyen margen**.
-
----
-
-## KPIs de clientes (calidad, no cantidad)
-
-### 🔴 11. Ingresos por cliente activo
-
-```sh
-Ventas totales / clientes activos
-```
-
-👉 Crecer clientes pequeños no siempre conviene.
-
----
-
-### 🔴 12. Churn de clientes rentables
-
-```sh
-Clientes rentables perdidos / clientes rentables totales
-```
-
-Más importante que churn total.
-
----
-
-## Conclusión
-
-Si tuviera que resumir en **10 KPIs de comité gerencial**:
-
-### 📊 VENTAS
-
-1. Margen por cliente
-2. Margen por producto
-3. Mix de ventas rentable
-4. OTIF rentable
-5. % ventas a precio objetivo
-
-### 📈 MARKETING
-
-1. CAC de clientes rentables
-2. Conversión a cliente rentable
-3. Pipeline ponderado por margen
-
-### 💰 CARTERA / PRICING
-
-1. Descuento promedio vs lista
-2. Ingreso promedio por cliente
-
----
-
-## Evitar
-
-- ❌ Bonificar vendedores por volumen
-- ❌ Marketing por leads sin calidad
-- ❌ Urgencias comerciales sin costo visible
-
-✔ Bonificar por **margen + disciplina operativa**
-
----
+- The file shows you:
+  - How to create a view of monthly sales data
+  - How to create sql moving average to forecast the next 12 months of sales data
